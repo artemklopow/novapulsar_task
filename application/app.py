@@ -13,7 +13,6 @@ df['MONTH'] = pd.to_datetime(df['MONTH'])
 months = pd.Series(df['MONTH'].unique())
 months = dict((i, {'timestamp': months[i], 'string': months[i].strftime('%b %Y')}) for i in months.index)
 
-
 app = dash.Dash(__name__)
 app.layout = html.Div([
     
@@ -23,9 +22,16 @@ app.layout = html.Div([
         min=min(months.keys()),
         max=max(months.keys()),
         step=None,
-        marks=dict((i, months[i]['string']) for i in months),
-    value=[min(months.keys()), max(months.keys())]
+        marks=dict(
+            (i, 
+            {
+                'label': months[i]['string'], 
+                'style': {'width': '1px', 'text-align': 'center'}
+             }
+             ) for i in months),
+        value=[min(months.keys()), max(months.keys())]
     ),
+    html.Br(),
     html.Div(id='out_date_slider')
 ])
 
