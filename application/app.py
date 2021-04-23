@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 
 
 from collections import Counter
+from wordcloud import WordCloud
 
 
 def get_top3_specialty(string):
@@ -73,6 +74,7 @@ app.layout = html.Div([
     dcc.Graph(id='timeseries', style={'border': '3px solid green'}),
     dcc.Graph(id='scatter', style={'border': '3px solid black'}),
     dcc.Graph(id='pie', style={'border': '3px solid red'}),
+    dcc.Graph(id='wordcloud', style={'border': '3px solid blue'}),
     html.Br(),
     html.Div(id='out_date_slider'),
     html.Div(id='out_payers_checklist')
@@ -148,9 +150,26 @@ def update_pie(dates, payers):
     customdata = filtered_df['CLAIM_SPECIALTY']
     fig = go.Figure(data=[go.Pie(labels=labels, values=values, customdata = customdata, hole=.6,
                             hovertemplate = "SERVICE_CATEGORY:%{label} <br>PAID_AMOUNT: %{value} </br> TOP SPECIALTIES:%{customdata}")])
-   
+    
     return fig
 
+@app.callback(
+    dash.dependencies.Output('wordcloud', 'figure'),
+    [dash.dependencies.Input('date_slider', 'value',),
+    dash.dependencies.Input('payers_checklist', 'value')])
+def update_wordcloud(dates, payers):
+    min_date = months[dates[0]]['timestamp']
+    max_date = months[dates[1]]['timestamp']
+    filtered_df = df[(df['MONTH'] >= min_date) & (df['MONTH'] <= max_date) & (np.isin(df['PAYER'], payers))]
+    words = ' '.join(filter(lambda x: x != 'nan', [i for i in filtered_df['CLAIM_SPECIALTY']]))
+    word_dict = dict(Counter(words.split(' ')))
+    wc = WordCloud(background_color="white", max_words=1000)
+    wc.generate_from_frequencies(word_dict)
+    fig = px.imshow(wc)
+    fig.update_xaxes(showticklabels=False)
+    fig.update_yaxes(showticklabels=False)
+
+    return fig
 
 
 if __name__ == '__main__':
