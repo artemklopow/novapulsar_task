@@ -1,4 +1,5 @@
 import dash
+import uvicorn
 import dash_html_components as html
 import dash_core_components as dcc
 import pandas as pd
@@ -9,6 +10,8 @@ import plotly.graph_objects as go
 
 from collections import Counter
 from wordcloud import WordCloud
+from fastapi import FastAPI
+from starlette.middleware.wsgi import WSGIMiddleware
 
 
 def get_top3_specialty(string):
@@ -231,4 +234,7 @@ def update_wordcloud(dates, payers):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    #app.run_server(debug=False)
+    server = FastAPI()
+    server.mount("/", WSGIMiddleware(app.server))
+    uvicorn.run(server, host='0.0.0.0', port=8000)
