@@ -34,7 +34,7 @@ months = dict((i, {'timestamp': months[i], 'string': months[i].strftime('%b %Y')
 
 payers = list(df['PAYER'].unique())
 
-# Группировки датасета. Чтобы не делать это в callback
+# Для timeseries можно сгруппировать по датам заранее, чтобы не делать это в callback
 df_sum_paid_by_payer = df.groupby(by=['MONTH', 'PAYER'], as_index=False).agg({'PAID_AMOUNT': 'sum', 
                                                                               'CLAIM_SPECIALTY': lambda x: ' '.join(x)})
 df_sum_paid_by_payer.rename(columns={'CLAIM_SPECIALTY': 'TOP_SPECIALTIES'}, inplace=True)
@@ -71,6 +71,7 @@ app.layout = html.Div([
             )
         ], 
     ),
+    # Добавляем фигуры в хтмл.
     html.Div([dcc.Graph(id='timeseries', style={'border-right': '1px gray', 'border-bottom': '1px gray'}), 
         dcc.Graph(id='scatter', style={'border-right': '1px gray', 'border-top': '1px gray'})
     ], style={'height': '20%', 'width': '61%', 'display': 'inline-block'}),
@@ -79,16 +80,22 @@ app.layout = html.Div([
         style={'height': '20%', 'width': '39%', 'float': 'right', 'display': 'inline-block'})
 ])
 
+
+
 @app.callback(
     dash.dependencies.Output('timeseries', 'figure'),
     [dash.dependencies.Input('date_slider', 'value',),
     dash.dependencies.Input('payers_checklist', 'value')])
 def update_timeseries(dates, payers):
-
+    """
+    Callback временного ряда. Подаем крайние даты временного интервала и список PAYER из чеклиста.
+    Фильтруем датасет, и рисуем.
+    """
     min_date = months[dates[0]]['timestamp']
     max_date = months[dates[1]]['timestamp']
     filtered_df = df_sum_paid_by_payer[(df_sum_paid_by_payer['MONTH'] >= min_date) & (df_sum_paid_by_payer['MONTH'] <= max_date) & (np.isin(df_sum_paid_by_payer['PAYER'], payers))]
     
+    # Заклинание против пустого чеклиста.
     if filtered_df.shape[0] == 0:
         return {}
 
@@ -118,10 +125,15 @@ def update_timeseries(dates, payers):
     [dash.dependencies.Input('date_slider', 'value',),
     dash.dependencies.Input('payers_checklist', 'value')])
 def update_scatter(dates, payers):
+    """
+    Callback scatter. Подаем крайние даты временного интервала и список PAYER из чеклиста.
+    Фильтруем датасет, и рисуем.
+    """
     min_date = months[dates[0]]['timestamp']
     max_date = months[dates[1]]['timestamp']
     filtered_df = df[(df['MONTH'] >= min_date) & (df['MONTH'] <= max_date) & (np.isin(df['PAYER'], payers))]
     
+    # Заклинание против пустого чеклиста.
     if filtered_df.shape[0] == 0:
         return {}
 
@@ -152,11 +164,18 @@ def update_scatter(dates, payers):
     [dash.dependencies.Input('date_slider', 'value',),
     dash.dependencies.Input('payers_checklist', 'value')])
 def update_pie(dates, payers):
+    """
+    Callback пирога. Подаем крайние даты временного интервала и список PAYER из чеклиста.
+    Фильтруем датасет, и рисуем.
+    """
     min_date = months[dates[0]]['timestamp']
     max_date = months[dates[1]]['timestamp']
     filtered_df = df[(df['MONTH'] >= min_date) & (df['MONTH'] <= max_date) & (np.isin(df['PAYER'], payers))]
+    
+    # Заклинание против пустого чеклиста.
     if filtered_df.shape[0] == 0:
         return {}
+
     filtered_df = filtered_df.groupby(['SERVICE_CATEGORY'], as_index=False).agg({'PAID_AMOUNT': 'sum', 'CLAIM_SPECIALTY':lambda x: ' '.join(x)})
     filtered_df['CLAIM_SPECIALTY'] = filtered_df['CLAIM_SPECIALTY'].apply(lambda x: get_top3_specialty(x))
     labels = filtered_df['SERVICE_CATEGORY']
@@ -180,11 +199,18 @@ def update_pie(dates, payers):
     [dash.dependencies.Input('date_slider', 'value',),
     dash.dependencies.Input('payers_checklist', 'value')])
 def update_wordcloud(dates, payers):
+    """
+    Callback wordcloud. Подаем крайние даты временного интервала и список PAYER из чеклиста.
+    Фильтруем датасет, и рисуем.
+    """
     min_date = months[dates[0]]['timestamp']
     max_date = months[dates[1]]['timestamp']
     filtered_df = df[(df['MONTH'] >= min_date) & (df['MONTH'] <= max_date) & (np.isin(df['PAYER'], payers))]
+    
+    # Заклинание против пустого чеклиста.
     if filtered_df.shape[0] == 0:
         return {}
+
     words = ' '.join(filter(lambda x: x != 'nan', [i for i in filtered_df['CLAIM_SPECIALTY']]))
     word_dict = dict(Counter(words.split(' ')))
     wc = WordCloud(background_color="white", max_words=1000)
@@ -205,4 +231,4 @@ def update_wordcloud(dates, payers):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
