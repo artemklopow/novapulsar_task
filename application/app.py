@@ -43,7 +43,7 @@ df_sum_paid_by_payer = df.groupby(by=['MONTH', 'PAYER'], as_index=False).agg({'P
 df_sum_paid_by_payer.rename(columns={'CLAIM_SPECIALTY': 'TOP_SPECIALTIES'}, inplace=True)
 df_sum_paid_by_payer['TOP_SPECIALTIES'] = df_sum_paid_by_payer['TOP_SPECIALTIES'].apply(lambda x: get_top3_specialty(x))
 
-app = dash.Dash(__name__)
+app = dash.Dash(requests_pathname_prefix='/novapulsar_task/')
 app.layout = html.Div([
     
     html.Div([
@@ -236,5 +236,5 @@ def update_wordcloud(dates, payers):
 if __name__ == '__main__':
     #app.run_server(debug=False)
     server = FastAPI()
-    server.mount("/", WSGIMiddleware(app.server))
+    server.mount("/novapulsar_task", WSGIMiddleware(app.server))
     uvicorn.run(server, host='0.0.0.0', port=8000)
