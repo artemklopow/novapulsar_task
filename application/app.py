@@ -71,28 +71,13 @@ app.layout = html.Div([
             )
         ], 
     ),
-    dcc.Graph(id='timeseries', style={'border': '3px solid green'}),
-    dcc.Graph(id='scatter', style={'border': '3px solid black'}),
-    dcc.Graph(id='pie', style={'border': '3px solid red'}),
-    dcc.Graph(id='wordcloud', style={'border': '3px solid blue'}),
-    html.Br(),
-    html.Div(id='out_date_slider'),
-    html.Div(id='out_payers_checklist')
+    html.Div([dcc.Graph(id='timeseries', style={'border-right': '1px gray', 'border-bottom': '1px gray'}), 
+        dcc.Graph(id='scatter', style={'border-right': '1px gray', 'border-top': '1px gray'})
+    ], style={'height': '20%', 'width': '61%', 'display': 'inline-block'}),
+    html.Div([dcc.Graph(id='pie', style={'border-left': '1px gray', 'border-bottom': '1px gray'}),
+        dcc.Graph(id='wordcloud', style={'border-left': '1px gray', 'border-top': '1px gray'})],
+        style={'height': '20%', 'width': '39%', 'float': 'right', 'display': 'inline-block'})
 ])
-
-
-@app.callback(
-    dash.dependencies.Output('out_date_slider', 'children'),
-    [dash.dependencies.Input('date_slider', 'value')])
-def update_dates(value):
-    return '{} - {}'.format(months[value[0]]['string'], months[value[1]]['string'])
-
-
-@app.callback(
-    dash.dependencies.Output('out_payers_checklist', 'children'),
-    [dash.dependencies.Input('payers_checklist', 'value')])
-def update_payers(value):
-    return ', '.join(value)
 
 @app.callback(
     dash.dependencies.Output('timeseries', 'figure'),
@@ -111,12 +96,20 @@ def update_timeseries(dates, payers):
         fig = px.bar(filtered_df, x='PAYER', y='PAID_AMOUNT', hover_data=['TOP_SPECIALTIES'], color='PAYER')
         return fig
     
-    fig = px.line(filtered_df, x='MONTH', y='PAID_AMOUNT', line_group='PAYER', color='PAYER', hover_data=['TOP_SPECIALTIES'])
+    fig = px.line(filtered_df, x='MONTH', y='PAID_AMOUNT', 
+        line_group='PAYER', color='PAYER', hover_data=['TOP_SPECIALTIES'])
 
     fig.update_xaxes(
         tickformat="%b\n%Y"
     )
     fig.update_traces(mode="markers+lines")
+    fig.update_layout(
+        title={
+            'text': 'SUM PAID AMOUNT BY MONTH',
+            'y':0.93,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'})
 
     return fig
 
@@ -145,6 +138,13 @@ def update_scatter(dates, payers):
                 size='PAID_AMOUNT', 
                 hover_data=['PAID_AMOUNT', 'CLAIMS', 'TOP_SPECIALTIES'],
                 size_max=40)
+    fig.update_layout(
+        title={
+            'text': 'SUM PAID AMOUNT AND NUMBER OF CLAIMS BY SERVICE CATEGORY AND PAYER',
+            'y':0.93,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'})
     return fig
 
 @app.callback(
@@ -164,7 +164,15 @@ def update_pie(dates, payers):
     customdata = filtered_df['CLAIM_SPECIALTY']
     fig = go.Figure(data=[go.Pie(labels=labels, values=values, customdata = customdata, hole=.6,
                             hovertemplate = "SERVICE_CATEGORY:%{label} <br>PAID_AMOUNT: %{value} </br> TOP SPECIALTIES:%{customdata}")])
-    
+    fig.update_layout(
+        title={
+            'text': 'SUM PAID AMOUNT BY SERVICE CATEGORY',
+            'y':0.93,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'})
+
+
     return fig
 
 @app.callback(
@@ -184,6 +192,14 @@ def update_wordcloud(dates, payers):
     fig = px.imshow(wc)
     fig.update_xaxes(showticklabels=False)
     fig.update_yaxes(showticklabels=False)
+    fig.update_layout(
+        title={
+            'text': 'WORDCLOUD BY NUMBER OF CLAIMS',
+            'y':0.93,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'}
+    )
 
     return fig
 
