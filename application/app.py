@@ -104,6 +104,9 @@ def update_timeseries(dates, payers):
     max_date = months[dates[1]]['timestamp']
     filtered_df = df_sum_paid_by_payer[(df_sum_paid_by_payer['MONTH'] >= min_date) & (df_sum_paid_by_payer['MONTH'] <= max_date) & (np.isin(df_sum_paid_by_payer['PAYER'], payers))]
     
+    if filtered_df.shape[0] == 0:
+        return {}
+
     if dates[0] == dates[1]:
         fig = px.bar(filtered_df, x='PAYER', y='PAID_AMOUNT', hover_data=['TOP_SPECIALTIES'], color='PAYER')
         return fig
@@ -126,6 +129,9 @@ def update_scatter(dates, payers):
     max_date = months[dates[1]]['timestamp']
     filtered_df = df[(df['MONTH'] >= min_date) & (df['MONTH'] <= max_date) & (np.isin(df['PAYER'], payers))]
     
+    if filtered_df.shape[0] == 0:
+        return {}
+
     filtered_df = filtered_df.groupby(by=['SERVICE_CATEGORY', 'PAYER'], as_index=False).agg({'PAID_AMOUNT': 'sum',
                                                                               'MONTH': 'count',
                                                                               'CLAIM_SPECIALTY': lambda x: ' '.join(x)})
@@ -149,6 +155,8 @@ def update_pie(dates, payers):
     min_date = months[dates[0]]['timestamp']
     max_date = months[dates[1]]['timestamp']
     filtered_df = df[(df['MONTH'] >= min_date) & (df['MONTH'] <= max_date) & (np.isin(df['PAYER'], payers))]
+    if filtered_df.shape[0] == 0:
+        return {}
     filtered_df = filtered_df.groupby(['SERVICE_CATEGORY'], as_index=False).agg({'PAID_AMOUNT': 'sum', 'CLAIM_SPECIALTY':lambda x: ' '.join(x)})
     filtered_df['CLAIM_SPECIALTY'] = filtered_df['CLAIM_SPECIALTY'].apply(lambda x: get_top3_specialty(x))
     labels = filtered_df['SERVICE_CATEGORY']
@@ -167,6 +175,8 @@ def update_wordcloud(dates, payers):
     min_date = months[dates[0]]['timestamp']
     max_date = months[dates[1]]['timestamp']
     filtered_df = df[(df['MONTH'] >= min_date) & (df['MONTH'] <= max_date) & (np.isin(df['PAYER'], payers))]
+    if filtered_df.shape[0] == 0:
+        return {}
     words = ' '.join(filter(lambda x: x != 'nan', [i for i in filtered_df['CLAIM_SPECIALTY']]))
     word_dict = dict(Counter(words.split(' ')))
     wc = WordCloud(background_color="white", max_words=1000)
