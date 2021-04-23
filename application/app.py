@@ -99,10 +99,16 @@ def update_payers(value):
     [dash.dependencies.Input('date_slider', 'value',),
     dash.dependencies.Input('payers_checklist', 'value')])
 def update_timeseries(dates, payers):
+
     min_date = months[dates[0]]['timestamp']
     max_date = months[dates[1]]['timestamp']
     filtered_df = df_sum_paid_by_payer[(df_sum_paid_by_payer['MONTH'] >= min_date) & (df_sum_paid_by_payer['MONTH'] <= max_date) & (np.isin(df_sum_paid_by_payer['PAYER'], payers))]
-    fig = px.line(filtered_df, x="MONTH", y="PAID_AMOUNT", line_group='PAYER', color='PAYER', hover_data=['TOP_SPECIALTIES'])
+    
+    if dates[0] == dates[1]:
+        fig = px.bar(filtered_df, x='PAYER', y='PAID_AMOUNT', hover_data=['TOP_SPECIALTIES'], color='PAYER')
+        return fig
+    
+    fig = px.line(filtered_df, x='MONTH', y='PAID_AMOUNT', line_group='PAYER', color='PAYER', hover_data=['TOP_SPECIALTIES'])
 
     fig.update_xaxes(
         tickformat="%b\n%Y"
